@@ -1,11 +1,14 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# smali wrapper - compila Smali para DEX via jadx
+# smali wrapper - compila Smali para DEX usando o jar do jadx (bundla smali)
 MCP_BIN="/data/data/com.termux/files/home/android-mcp/bin"
-JADX="/data/data/com.termux/files/usr/share/java/jadx-1.5.5-all.jar"
 JCOMMANDER="$MCP_BIN/jcommander-1.64.jar"
+JADX_DIR="/data/data/com.termux/files/usr/share/java"
 
-if [ ! -f "$JADX" ]; then
-    JADX=$(find /data/data/com.termux/files/usr/share/java -name "jadx-*.jar" 2>/dev/null | head -1)
+JADX=$(find "$JADX_DIR" -maxdepth 1 -name "jadx-*-all.jar" 2>/dev/null | head -1)
+
+if [ -z "$JADX" ]; then
+    echo "✗ jadx não encontrado em $JADX_DIR. Instale com: pkg install jadx" >&2
+    exit 1
 fi
 
 CP="${JCOMMANDER}:${JADX}"
