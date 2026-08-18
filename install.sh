@@ -13,6 +13,7 @@ BOLD='\033[1m'
 
 TERMUX_HOME="/data/data/com.termux/files/home"
 TERMUX_PREFIX="/data/data/com.termux/files/usr"
+TMP_DIR="${TMPDIR:-$TERMUX_PREFIX/tmp}"
 REPO_URL="https://github.com/LcsFern/termux-mcp-setup"
 REPO_TARBALL_URL="${REPO_URL}/archive/refs/heads/main.tar.gz"
 
@@ -51,7 +52,7 @@ REPO_DIR="$(cd "$(dirname "$SCRIPT_PATH")" 2>/dev/null && pwd)"
 if [ ! -f "$REPO_DIR/install.sh" ] || [ ! -d "$REPO_DIR/config" ] || [ ! -d "$REPO_DIR/server" ] || [ ! -d "$REPO_DIR/scripts" ]; then
     warn "Executando via pipe (curl|bash). Baixando o repositório..."
     REPO_DIR="$TERMUX_HOME/.termux-mcp-setup"
-    TARBALL="/tmp/termux-mcp-setup.tar.gz"
+    TARBALL="$TMP_DIR/termux-mcp-setup.tar.gz"
     curl -fsSL "$REPO_TARBALL_URL" -o "$TARBALL"
     rm -rf "$REPO_DIR"
     mkdir -p "$REPO_DIR"
@@ -65,6 +66,9 @@ if [ ! -d "$TERMUX_HOME/storage" ]; then
     info "Solicitando acesso ao storage (aceite o popup do Android)..."
     termux-setup-storage 2>/dev/null || true
 fi
+
+# Diretório tmp usado pelo servidor MCP (server.js)
+mkdir -p "$TERMUX_HOME/tmp"
 
 log "Termux detectado: $(termux-info 2>/dev/null | grep TERMUX_VERSION | head -1 | cut -d= -f2 || echo 'desconhecido')"
 
@@ -94,7 +98,7 @@ PACKAGES=(
 
 info "Instalando pacotes (tentativa em lote)..."
 FAILED_PKGS=()
-if ! pkg install -y "${PACKAGES[@]}" 2>/tmp/pkg_bulk.err; then
+if ! pkg install -y "${PACKAGES[@]}" 2>"$TMP_DIR/pkg_bulk.err"; then
     warn "Instalação em lote falhou. Tentando pacote por pacote..."
     for p in "${PACKAGES[@]}"; do
         if pkg install -y "$p" >/dev/null 2>&1; then
